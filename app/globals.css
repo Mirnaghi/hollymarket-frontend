@@ -1,0 +1,227 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 263 70% 50%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 263 70% 50%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 263 70% 50%;
+    --chart-1: 263 70% 50%;
+    --chart-2: 235 70% 50%;
+    --chart-3: 280 70% 50%;
+    --chart-4: 215 70% 50%;
+    --chart-5: 300 70% 50%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 263 70% 50%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 263 70% 50%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 263 70% 50%;
+    --chart-1: 263 70% 50%;
+    --chart-2: 235 70% 50%;
+    --chart-3: 280 70% 50%;
+    --chart-4: 215 70% 50%;
+    --chart-5: 300 70% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Hide number input spinners */
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+}
+
+/* Cosmic Night Theme Enhancements */
+body {
+  background: linear-gradient(135deg, #0a0a1f 0%, #1a0a2e 50%, #0a0a1f 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(138, 43, 226, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(75, 0, 130, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(72, 61, 139, 0.1) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.5);
+  border-left: 1px solid rgba(139, 92, 246, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #8b5cf6 0%, #6366f1 100%);
+  border-radius: 5px;
+  border: 2px solid rgba(0, 0, 0, 0.5);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #a78bfa 0%, #818cf8 100%);
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+}
+
+/* Hide scrollbar utility */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(26, 10, 46, 0.6);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+/* Glow effects */
+.glow {
+  box-shadow:
+    0 0 20px rgba(139, 92, 246, 0.4),
+    0 0 40px rgba(139, 92, 246, 0.2);
+}
+
+.glow-hover {
+  transition: all 0.3s ease;
+}
+
+.glow-hover:hover {
+  box-shadow:
+    0 0 30px rgba(139, 92, 246, 0.6),
+    0 0 60px rgba(139, 92, 246, 0.3),
+    0 4px 20px rgba(0, 0, 0, 0.5);
+  transform: translateY(-2px);
+  border-color: rgba(139, 92, 246, 0.4);
+}
+
+/* Modal animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromBottom {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInFromTop {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation-fill-mode: both;
+}
+
+.fade-in {
+  animation-name: fadeIn;
+}
+
+.slide-in-from-bottom-8 {
+  animation-name: slideInFromBottom;
+}
+
+.slide-in-from-bottom-4 {
+  animation-name: slideInFromBottom;
+}
+
+.slide-in-from-top-2 {
+  animation-name: slideInFromTop;
+}
+
+.duration-200 {
+  animation-duration: 200ms;
+}
+
+.duration-300 {
+  animation-duration: 300ms;
+}
