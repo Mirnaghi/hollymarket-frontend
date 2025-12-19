@@ -14,8 +14,8 @@ export function useIntersectionObserver({
   rootMargin = '200px',
   onIntersect,
   enabled = true
-}: UseIntersectionObserverOptions): RefObject<HTMLDivElement> {
-  const targetRef = useRef<HTMLDivElement>(null);
+}: UseIntersectionObserverOptions): RefObject<HTMLDivElement | null> {
+  const targetRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!enabled) return;
