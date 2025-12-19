@@ -208,6 +208,17 @@ class ApiClient {
     const { data } = await this.client.delete('/trading/order', { data: { orderID } });
     return data;
   }
+
+  // Comments methods
+  async getComments(params: {
+    parent_entity_id: string | number;
+    parent_entity_type: 'Event' | 'Market';
+    limit?: number;
+    offset?: number;
+  }) {
+    const { data } = await this.client.get('/comments', { params });
+    return data;
+  }
 }
 
 export const apiClient = new ApiClient();

@@ -1,10 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { PolymarketEvent } from "@/types/api"
-import { Clock, DollarSign, TrendingUp } from "lucide-react"
+import { PolymarketEvent, PolymarketMarket } from "@/types/api"
+import { Clock, DollarSign } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { parseArrayField } from "@/lib/utils/parse-helpers"
+import { TradingModal } from "./trading-modal"
+import { MarketEvent } from "./event-card"
 
 interface EventWithMarketsCardProps {
   event: PolymarketEvent
@@ -13,6 +15,9 @@ interface EventWithMarketsCardProps {
 
 export function EventWithMarketsCard({ event, onClick }: EventWithMarketsCardProps) {
   const [imageError, setImageError] = useState(false)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedMarket, setSelectedMarket] = useState<MarketEvent | null>(null)
+  const [selectedSide, setSelectedSide] = useState<"yes" | "no">("yes")
 
   const getAvatarLetter = () => {
     return event.title.charAt(0).toUpperCase()
@@ -47,6 +52,44 @@ export function EventWithMarketsCard({ event, onClick }: EventWithMarketsCardPro
     if (onClick) {
       onClick(event)
     }
+  }
+
+  const convertToMarketEvent = (market: PolymarketMarket): MarketEvent => {
+    const outcomePrices = parseArrayField(market.outcomePrices)
+    const yesPriceRaw = parseFloat(outcomePrices[0] || '0')
+    const yesPrice = Math.round(yesPriceRaw * 100)
+    const noPrice = outcomePrices.length > 1
+      ? Math.round(parseFloat(outcomePrices[1]) * 100)
+      : 100 - yesPrice
+
+    const formatVolume = (volume: number) => {
+      if (volume >= 1000000) {
+        return `$${(volume / 1000000).toFixed(1)}M`
+      } else if (volume >= 1000) {
+        return `$${(volume / 1000).toFixed(0)}K`
+      }
+      return `$${volume}`
+    }
+
+    return {
+      id: market.id,
+      title: market.question,
+      category: market.category || event.title,
+      yesPrice,
+      noPrice,
+      volume: formatVolume(market.volume),
+      endDate: formatDate(market.endDate),
+      icon: event.icon,
+      image: event.image,
+      eventId: event.id,
+    }
+  }
+
+  const handleMarketClick = (market: PolymarketMarket, side: "yes" | "no") => {
+    const marketEvent = convertToMarketEvent(market)
+    setSelectedMarket(marketEvent)
+    setSelectedSide(side)
+    setIsModalOpen(true)
   }
 
   return (
@@ -120,7 +163,8 @@ export function EventWithMarketsCard({ event, onClick }: EventWithMarketsCardPro
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
-                      // Handle Yes click
+                      e.preventDefault()
+                      handleMarketClick(market, "yes")
                     }}
                     className="flex items-center justify-between px-2 py-1.5 rounded bg-green-500/10 hover:bg-green-500/20 border border-green-500/30 transition-colors"
                   >
@@ -131,7 +175,8 @@ export function EventWithMarketsCard({ event, onClick }: EventWithMarketsCardPro
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
-                      // Handle No click
+                      e.preventDefault()
+                      handleMarketClick(market, "no")
                     }}
                     className="flex items-center justify-between px-2 py-1.5 rounded bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 transition-colors"
                   >
@@ -151,6 +196,16 @@ export function EventWithMarketsCard({ event, onClick }: EventWithMarketsCardPro
           </div>
         )}
       </div>
+
+      {/* Trading Modal */}
+      {selectedMarket && (
+        <TradingModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          event={selectedMarket}
+          initialSide={selectedSide}
+        />
+      )}
     </div>
   )
 }

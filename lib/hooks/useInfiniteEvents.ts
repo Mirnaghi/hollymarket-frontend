@@ -38,6 +38,7 @@ export function useInfiniteEvents(options: UseInfiniteEventsOptions = {}): UseIn
         limit,
         offset: currentOffset,
         active,
+        closed: false,
         tag_id
       });
 

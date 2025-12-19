@@ -8,6 +8,8 @@ import { PolymarketEvent } from "@/types/api"
 import { ArrowLeft, Share2, Bookmark, TrendingUp } from "lucide-react"
 import { CompactMarketCard } from "@/components/compact-market-card"
 import { transformEventMarketsToEvents } from "@/lib/utils/transform-api-data"
+import { CommentsSection } from "@/components/comments-section"
+import { useComments } from "@/lib/hooks/useComments"
 
 export default function EventDetailPage() {
   const router = useRouter()
@@ -17,6 +19,12 @@ export default function EventDetailPage() {
   const [event, setEvent] = useState<PolymarketEvent | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  // Load comments
+  const { comments, loading: commentsLoading, error: commentsError, count } = useComments({
+    parentEntityId: eventId,
+    parentEntityType: 'Event'
+  })
 
   useEffect(() => {
     const loadEventDetail = async () => {
@@ -97,116 +105,121 @@ export default function EventDetailPage() {
           <span className="text-sm">Back to Markets</span>
         </button>
 
-        {/* Event Header */}
-        <div className="mb-8">
-          <div className="flex items-start justify-between gap-4 mb-4">
-            <div className="flex items-start gap-4">
-              {event.icon && (
-                <div className="w-16 h-16 rounded-full overflow-hidden border border-border/50 bg-muted/30 flex-shrink-0">
-                  <img
-                    src={event.icon}
-                    alt={event.title}
-                    className="w-full h-full object-cover"
-                  />
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] xl:grid-cols-[1fr_500px] gap-6">
+          {/* Left Column - Event Info */}
+          <div>
+            {/* Event Header */}
+            <div className="mb-8">
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <div className="flex items-start gap-4">
+                  {event.icon && (
+                    <div className="w-16 h-16 rounded-full overflow-hidden border border-border/50 bg-muted/30 flex-shrink-0">
+                      <img
+                        src={event.icon}
+                        alt={event.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <h1 className="text-2xl sm:text-3xl font-bold mb-2">{event.title}</h1>
+                    {event.description && (
+                      <p className="text-muted-foreground text-sm sm:text-base">
+                        {event.description}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              )}
-              <div>
-                <h1 className="text-2xl sm:text-3xl font-bold mb-2">{event.title}</h1>
-                {event.description && (
-                  <p className="text-muted-foreground text-sm sm:text-base max-w-3xl">
-                    {event.description}
-                  </p>
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-2">
+                  <button className="p-2 rounded-lg border border-border/50 bg-background/50 hover:bg-muted/50 transition-colors">
+                    <Share2 className="h-4 w-4" />
+                  </button>
+                  <button className="p-2 rounded-lg border border-border/50 bg-background/50 hover:bg-muted/50 transition-colors">
+                    <Bookmark className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Event Stats */}
+              <div className="flex flex-wrap items-center gap-4 text-sm">
+                {event.tags && event.tags.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    {event.tags.map((tag) => {
+                      // Handle both string tags and tag objects
+                      const tagLabel = typeof tag === 'string' ? tag : (tag.label || tag.name || tag.slug)
+                      const tagKey = typeof tag === 'string' ? tag : tag.id
+                      return (
+                        <span
+                          key={tagKey}
+                          className="px-2 py-1 rounded-md bg-primary/10 text-primary text-xs"
+                        >
+                          {tagLabel}
+                        </span>
+                      )
+                    })}
+                  </div>
+                )}
+                {event.volume && (
+                  <div className="flex items-center gap-1 text-muted-foreground">
+                    <TrendingUp className="h-4 w-4" />
+                    <span>
+                      Volume: $
+                      {event.volume >= 1000000
+                        ? `${(event.volume / 1000000).toFixed(1)}M`
+                        : event.volume >= 1000
+                        ? `${(event.volume / 1000).toFixed(0)}K`
+                        : event.volume}
+                    </span>
+                  </div>
+                )}
+                {event.commentCount !== undefined && (
+                  <span className="text-muted-foreground">
+                    {event.commentCount} comments
+                  </span>
                 )}
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex items-center gap-2">
-              <button className="p-2 rounded-lg border border-border/50 bg-background/50 hover:bg-muted/50 transition-colors">
-                <Share2 className="h-4 w-4" />
-              </button>
-              <button className="p-2 rounded-lg border border-border/50 bg-background/50 hover:bg-muted/50 transition-colors">
-                <Bookmark className="h-4 w-4" />
-              </button>
+            {/* Comments Section */}
+            <div className="mt-8">
+              <CommentsSection
+                comments={comments}
+                loading={commentsLoading}
+                error={commentsError}
+                count={count}
+              />
             </div>
           </div>
 
-          {/* Event Stats */}
-          <div className="flex flex-wrap items-center gap-4 text-sm">
-            {event.tags && event.tags.length > 0 && (
-              <div className="flex items-center gap-2">
-                {event.tags.map((tag) => {
-                  // Handle both string tags and tag objects
-                  const tagLabel = typeof tag === 'string' ? tag : (tag.label || tag.name || tag.slug)
-                  const tagKey = typeof tag === 'string' ? tag : tag.id
-                  return (
-                    <span
-                      key={tagKey}
-                      className="px-2 py-1 rounded-md bg-primary/10 text-primary text-xs"
-                    >
-                      {tagLabel}
-                    </span>
-                  )
-                })}
+          {/* Right Column - Markets */}
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Markets</h2>
+              <p className="text-sm text-muted-foreground">
+                {marketEvents.length} {marketEvents.length === 1 ? "market" : "markets"}
+              </p>
+            </div>
+
+            {marketEvents.length > 0 ? (
+              <div className="space-y-3 sm:space-y-4">
+                {marketEvents.map((marketEvent) => (
+                  <CompactMarketCard
+                    key={marketEvent.id}
+                    event={marketEvent}
+                    onClick={() => {}}
+                  />
+                ))}
               </div>
-            )}
-            {event.volume && (
-              <div className="flex items-center gap-1 text-muted-foreground">
-                <TrendingUp className="h-4 w-4" />
-                <span>
-                  Volume: $
-                  {event.volume >= 1000000
-                    ? `${(event.volume / 1000000).toFixed(1)}M`
-                    : event.volume >= 1000
-                    ? `${(event.volume / 1000).toFixed(0)}K`
-                    : event.volume}
-                </span>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center border border-border/40 rounded-lg bg-card/30">
+                <p className="text-muted-foreground">No markets available</p>
               </div>
-            )}
-            {event.commentCount !== undefined && (
-              <span className="text-muted-foreground">
-                {event.commentCount} comments
-              </span>
             )}
           </div>
         </div>
-
-        {/* Markets Section */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Markets</h2>
-            <p className="text-sm text-muted-foreground">
-              {marketEvents.length} {marketEvents.length === 1 ? "market" : "markets"}
-            </p>
-          </div>
-
-          {marketEvents.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-              {marketEvents.map((marketEvent) => (
-                <CompactMarketCard
-                  key={marketEvent.id}
-                  event={marketEvent}
-                  onClick={() => {}}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12 text-center border border-border/40 rounded-lg bg-card/30">
-              <p className="text-muted-foreground">No markets available</p>
-            </div>
-          )}
-        </div>
-
-        {/* Event Image */}
-        {event.image && (
-          <div className="rounded-lg overflow-hidden border border-border/40 mt-6">
-            <img
-              src={event.image}
-              alt={event.title}
-              className="w-full h-auto object-cover"
-            />
-          </div>
-        )}
       </main>
     </div>
   )

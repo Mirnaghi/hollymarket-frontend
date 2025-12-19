@@ -153,3 +153,26 @@ export interface GetEventsParams {
   tag_id?: string;
   ascending?: boolean;
 }
+
+// Comment types
+export interface CommentProfile {
+  name: string;
+  pseudonym: string;
+  displayUsernamePublic: boolean;
+  proxyWallet: string;
+  baseAddress: string;
+  profileImage?: string;
+}
+
+export interface Comment {
+  id: string;
+  body: string;
+  parentEntityType: string;
+  parentEntityID: number;
+  userAddress: string;
+  createdAt: string;
+  updatedAt: string;
+  profile: CommentProfile;
+  reportCount: number;
+  reactionCount: number;
+}
