@@ -2,12 +2,17 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useAccount } from "wagmi"
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Drawer, DrawerContent } from "@/components/ui/drawer"
 import { Input } from "@/components/ui/input"
 import { useMediaQuery } from "@/hooks/use-media-query"
+import { useTradingSetup } from "@/lib/hooks/useTradingSetup"
+import { clobService } from "@/lib/services/clob.service"
+import { TradingSetup } from "@/components/trading-setup"
 import type { MarketEvent } from "./event-card"
+import { AlertCircle, Loader2 } from "lucide-react"
 
 interface TradingModalProps {
   isOpen: boolean
@@ -18,10 +23,15 @@ interface TradingModalProps {
 
 export function TradingModal({ isOpen, onClose, event, initialSide }: TradingModalProps) {
   const router = useRouter()
+  const { isConnected } = useAccount()
+  const { isReadyToTrade, isWalletConnected } = useTradingSetup()
+
   const [side, setSide] = useState<"yes" | "no">(initialSide)
   const [action, setAction] = useState<"buy" | "sell">("buy")
   const [amount, setAmount] = useState("")
-  const [hasToken, setHasToken] = useState(false)
+  const [isExecuting, setIsExecuting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
   const isDesktop = useMediaQuery("(min-width: 768px)")
 
   useEffect(() => {
@@ -29,23 +39,65 @@ export function TradingModal({ isOpen, onClose, event, initialSide }: TradingMod
   }, [initialSide])
 
   useEffect(() => {
-    // Check for token in localStorage
-    const token = localStorage.getItem("X-Token")
-    setHasToken(!!token)
+    if (isOpen) {
+      setError(null)
+      setSuccess(false)
+    }
   }, [isOpen])
 
   const price = side === "yes" ? event.yesPrice : event.noPrice
 
-  const handleActionClick = () => {
-    if (!hasToken) {
-      router.push("/login")
+  const handleActionClick = async () => {
+    if (!isConnected) {
+      setError("Please connect your wallet to trade")
       return
     }
 
-    if (amount && parseFloat(amount) > 0) {
-      // Handle trade execution
-      console.log(`Executing trade: ${action} ${side} for $${amount}`)
-      // Add your trade logic here
+    if (!isReadyToTrade) {
+      setError("Please complete trading setup first")
+      return
+    }
+
+    const amountNum = parseFloat(amount)
+    if (!amount || amountNum <= 0) {
+      setError("Please enter a valid amount")
+      return
+    }
+
+    setIsExecuting(true)
+    setError(null)
+
+    try {
+      // Get token ID from event (you may need to add this to MarketEvent type)
+      const tokenID = (event as any).tokenId || event.id
+
+      // Calculate price in CLOB format (0.00 - 1.00)
+      const clobPrice = price / 100
+
+      // Calculate size (number of shares)
+      const size = amountNum / clobPrice
+
+      // Place order via CLOB
+      await clobService.createOrder({
+        tokenID,
+        price: clobPrice,
+        size,
+        side: action.toUpperCase() as "BUY" | "SELL",
+      })
+
+      setSuccess(true)
+      setAmount("")
+
+      // Close modal after short delay
+      setTimeout(() => {
+        onClose()
+        setSuccess(false)
+      }, 2000)
+    } catch (err: any) {
+      console.error("Trade execution failed:", err)
+      setError(err?.message || "Failed to execute trade. Please try again.")
+    } finally {
+      setIsExecuting(false)
     }
   }
 
@@ -81,6 +133,28 @@ export function TradingModal({ isOpen, onClose, event, initialSide }: TradingMod
 
       {/* Content */}
       <div className="p-4 sm:p-6 space-y-6 overflow-y-auto">
+        {/* Trading Setup (if not ready) */}
+        {!isReadyToTrade && isWalletConnected && (
+          <TradingSetup autoSetup />
+        )}
+
+        {/* Error Message */}
+        {error && (
+          <div className="rounded-lg border border-red-500/40 p-3 bg-red-500/10">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 text-red-500 mt-0.5" />
+              <p className="text-sm text-red-500">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Success Message */}
+        {success && (
+          <div className="rounded-lg border border-green-500/40 p-3 bg-green-500/10">
+            <p className="text-sm text-green-500 font-medium">✓ Order placed successfully!</p>
+          </div>
+        )}
+
         {/* Buy/Sell Toggle */}
         <div className="flex gap-2 p-1 bg-muted/30 rounded-lg">
           <button
@@ -179,19 +253,31 @@ export function TradingModal({ isOpen, onClose, event, initialSide }: TradingMod
         {/* Action Button */}
         <button
           onClick={handleActionClick}
+          disabled={isExecuting || !isConnected || !isReadyToTrade || success}
           className={cn(
             "w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
+            "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100",
             side === "yes"
               ? "bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-500 hover:to-purple-400 text-white shadow-lg shadow-purple-500/40"
               : "bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white shadow-lg shadow-indigo-500/40"
           )}
         >
-          {!hasToken
-            ? "Sign up to trade"
-            : amount && parseFloat(amount) > 0
-              ? `${action === "buy" ? "Buy" : "Sell"} ${side === "yes" ? "Yes" : "No"} for $${amount}`
-              : "Enter amount"
-          }
+          {isExecuting ? (
+            <span className="flex items-center justify-center gap-2">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              Placing order...
+            </span>
+          ) : success ? (
+            "Order Placed!"
+          ) : !isConnected ? (
+            "Connect Wallet"
+          ) : !isReadyToTrade ? (
+            "Complete Setup First"
+          ) : amount && parseFloat(amount) > 0 ? (
+            `${action === "buy" ? "Buy" : "Sell"} ${side === "yes" ? "Yes" : "No"} for $${amount}`
+          ) : (
+            "Enter amount"
+          )}
         </button>
       </div>
     </>

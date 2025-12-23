@@ -1,4 +1,3 @@
-import { createAppKit } from '@reown/appkit/react'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { mainnet, polygon, arbitrum } from 'viem/chains'
 import { QueryClient } from '@tanstack/react-query'
@@ -23,21 +22,5 @@ export const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: false,
     },
-  },
-})
-
-// 4. Create AppKit immediately (not lazily)
-createAppKit({
-  adapters: [wagmiAdapter],
-  networks: [mainnet, polygon, arbitrum],
-  projectId,
-  metadata: {
-    name: 'PredictX',
-    description: 'Trade on real-world events',
-    url: typeof window !== 'undefined' ? window.location.origin : 'https://predictx.app',
-    icons: ['https://avatars.githubusercontent.com/u/37784886']
-  },
-  features: {
-    analytics: false,
   },
 })
