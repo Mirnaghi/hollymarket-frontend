@@ -225,3 +225,33 @@ body > * {
 .duration-300 {
   animation-duration: 300ms;
 }
+
+/* Web3Modal z-index and positioning override */
+w3m-modal,
+wcm-modal,
+wui-modal,
+[data-walletconnect-modal],
+[id^="w3m-"],
+[id^="wcm-"],
+[id^="wui-"] {
+  z-index: 99999 !important;
+  position: fixed !important;
+  inset: 0 !important;
+}
+
+/* Ensure Web3Modal backdrop also has correct z-index */
+w3m-modal::part(overlay),
+wcm-modal::part(overlay),
+wui-modal::part(overlay),
+[id^="w3m-"] > div:first-child,
+[id^="wcm-"] > div:first-child,
+[id^="wui-"] > div:first-child {
+  z-index: 99998 !important;
+  position: fixed !important;
+  inset: 0 !important;
+}
+
+/* Ensure body children don't interfere */
+body > div[id] {
+  isolation: isolate;
+}

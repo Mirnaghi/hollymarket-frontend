@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAccount } from "wagmi"
+import { useWeb3Modal } from "@web3modal/wagmi/react"
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Drawer, DrawerContent } from "@/components/ui/drawer"
@@ -24,6 +25,7 @@ interface TradingModalProps {
 export function TradingModal({ isOpen, onClose, event, initialSide }: TradingModalProps) {
   const router = useRouter()
   const { isConnected } = useAccount()
+  const { open } = useWeb3Modal()
   const { isReadyToTrade, isWalletConnected } = useTradingSetup()
 
   const [side, setSide] = useState<"yes" | "no">(initialSide)
@@ -48,8 +50,15 @@ export function TradingModal({ isOpen, onClose, event, initialSide }: TradingMod
   const price = side === "yes" ? event.yesPrice : event.noPrice
 
   const handleActionClick = async () => {
+    console.log('Button clicked! isConnected:', isConnected)
     if (!isConnected) {
-      setError("Please connect your wallet to trade")
+      // Close trading modal first, then open wallet modal
+      console.log('Opening wallet modal...')
+      onClose()
+      // Small delay to ensure trading modal is closed before opening wallet modal
+      setTimeout(() => {
+        open()
+      }, 100)
       return
     }
 
@@ -253,7 +262,7 @@ export function TradingModal({ isOpen, onClose, event, initialSide }: TradingMod
         {/* Action Button */}
         <button
           onClick={handleActionClick}
-          disabled={isExecuting || !isConnected || !isReadyToTrade || success}
+          disabled={isExecuting || success || (isConnected && !isReadyToTrade)}
           className={cn(
             "w-full py-4 rounded-xl font-semibold text-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
             "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100",

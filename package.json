@@ -11,8 +11,6 @@
   "dependencies": {
     "@polymarket/clob-client": "^5.1.2",
     "@radix-ui/react-dialog": "^1.1.15",
-    "@reown/appkit": "^1.8.15",
-    "@reown/appkit-adapter-wagmi": "^1.8.15",
     "@tanstack/react-query": "^5.90.12",
     "@web3modal/wagmi": "^5.1.11",
     "axios": "^1.13.2",
@@ -23,14 +21,14 @@
     "ethers": "^5.7.2",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.468.0",
-    "next": "^15.0.3",
+    "next": "^16.1.1",
     "porto": "^0.2.37",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "tailwind-merge": "^2.5.5",
     "vaul": "^1.1.2",
-    "viem": "^2.43.1",
-    "wagmi": "^3.1.0"
+    "viem": "2.x",
+    "wagmi": "^2.12.25"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",

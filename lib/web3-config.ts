@@ -1,26 +1,27 @@
-import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
+import { defaultWagmiConfig } from '@web3modal/wagmi/react/config'
+import { cookieStorage, createStorage } from 'wagmi'
 import { mainnet, polygon, arbitrum } from 'viem/chains'
-import { QueryClient } from '@tanstack/react-query'
 
-// 1. Get projectId from https://cloud.walletconnect.com
-const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || ''
+// Get projectId from https://cloud.walletconnect.com
+export const projectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
 
-if (!projectId) {
-  console.warn('WalletConnect Project ID is not set. Please add NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID to your .env.local file')
+if (!projectId) throw new Error('Project ID is not defined')
+
+export const metadata = {
+  name: 'PredictX',
+  description: 'Trade on real-world events with prediction markets',
+  url: typeof window !== 'undefined' ? window.location.origin : 'https://predictx.app',
+  icons: ['https://avatars.githubusercontent.com/u/37784886']
 }
 
-// 2. Set up Wagmi adapter
-export const wagmiAdapter = new WagmiAdapter({
-  networks: [mainnet, polygon, arbitrum],
+// Create wagmiConfig with Polygon (required for Polymarket CLOB)
+const chains = [polygon, mainnet, arbitrum] as const
+export const config = defaultWagmiConfig({
+  chains,
   projectId,
-  ssr: true, // Enable SSR support
-})
-
-// 3. Set up query client
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-    },
-  },
+  metadata,
+  ssr: true,
+  storage: createStorage({
+    storage: cookieStorage
+  }),
 })
