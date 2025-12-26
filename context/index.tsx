@@ -1,6 +1,6 @@
 'use client'
 
-import { ReactNode, useEffect, useState } from 'react'
+import { ReactNode, useEffect } from 'react'
 import { config, projectId, metadata } from '../lib/web3-config'
 import { createWeb3Modal } from '@web3modal/wagmi/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -21,22 +21,29 @@ export default function AppKitProvider({
   children: ReactNode
   initialState?: State
 }) {
-  const [mounted, setMounted] = useState(false)
-
   useEffect(() => {
-    setMounted(true)
 
     // Create modal only on client side and only once
-    if (!modalInitialized && typeof window !== 'undefined') {
+    if (!modalInitialized && typeof window !== 'undefined' && projectId) {
       console.log('Creating Web3Modal with projectId:', projectId)
-      createWeb3Modal({
+      const modal = createWeb3Modal({
         metadata,
         wagmiConfig: config,
-        projectId,
+        projectId: projectId as string,
         enableAnalytics: false
       })
       modalInitialized = true
       console.log('Web3Modal created successfully')
+
+      // Listen for custom event to open modal
+      const handleOpenModal = () => {
+        modal.open()
+      }
+      window.addEventListener('web3modal:open', handleOpenModal)
+
+      return () => {
+        window.removeEventListener('web3modal:open', handleOpenModal)
+      }
     }
   }, [])
 

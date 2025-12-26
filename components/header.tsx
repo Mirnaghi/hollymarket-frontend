@@ -2,19 +2,29 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useAccount, useDisconnect } from "wagmi"
 import { Button } from "@/components/ui/button"
-import { TrendingUp, Menu, User, LogOut } from "lucide-react"
+import { TrendingUp, Menu, User, LogOut, Wallet, ExternalLink } from "lucide-react"
 
 export function Header() {
   const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const { address, isConnected } = useAccount()
+  const { disconnect } = useDisconnect()
 
   useEffect(() => {
     // Check for token in localStorage
     const token = localStorage.getItem("X-Token")
     setIsLoggedIn(!!token)
   }, [])
+
+  // Function to open wallet modal
+  const openWalletModal = () => {
+    // Use the global modal event
+    const event = new CustomEvent('web3modal:open')
+    window.dispatchEvent(event)
+  }
 
   const handleLogout = () => {
     localStorage.removeItem("X-Token")
@@ -70,8 +80,62 @@ export function Header() {
               </Button>
 
               {showUserMenu && (
-                <div className="absolute right-0 top-full mt-2 w-56 rounded-lg border border-border/50 bg-card/95 backdrop-blur-xl shadow-lg glass animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute right-0 top-full mt-2 w-64 rounded-lg border border-border/50 bg-card/95 backdrop-blur-xl shadow-lg glass animate-in fade-in slide-in-from-top-2 duration-200">
                   <div className="p-2 space-y-1">
+                    {/* Wallet Section */}
+                    {isConnected && address ? (
+                      <>
+                        <div className="px-3 py-2 mb-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Wallet className="h-4 w-4 text-purple-400" />
+                            <span className="text-xs font-semibold text-muted-foreground">WALLET</span>
+                          </div>
+                          <div className="bg-background/50 rounded-md p-2">
+                            <div className="flex items-center justify-between">
+                              <code className="text-xs font-mono text-foreground">
+                                {address.slice(0, 6)}...{address.slice(-4)}
+                              </code>
+                              <button
+                                onClick={() => {
+                                  setShowUserMenu(false)
+                                  openWalletModal()
+                                }}
+                                className="text-purple-400 hover:text-purple-300 transition-colors"
+                              >
+                                <ExternalLink className="h-3 w-3" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            disconnect()
+                            setShowUserMenu(false)
+                          }}
+                          className="w-full text-left px-3 py-2 rounded-md text-sm hover:bg-white/10 transition-colors text-orange-400 flex items-center gap-2"
+                        >
+                          <Wallet className="h-4 w-4" />
+                          Disconnect Wallet
+                        </button>
+                        <div className="border-t border-border/50 my-1"></div>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false)
+                            openWalletModal()
+                          }}
+                          className="w-full text-left px-3 py-2 rounded-md text-sm hover:bg-white/10 transition-colors text-purple-400 flex items-center gap-2"
+                        >
+                          <Wallet className="h-4 w-4" />
+                          Connect Wallet
+                        </button>
+                        <div className="border-t border-border/50 my-1"></div>
+                      </>
+                    )}
+
+                    {/* Account Menu Items */}
                     <button
                       onClick={() => {
                         setShowUserMenu(false)
