@@ -2,16 +2,20 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useAccount, useDisconnect } from "wagmi"
+import { useAccount, useDisconnect, useBalance } from "wagmi"
 import { Button } from "@/components/ui/button"
 import { TrendingUp, Menu, User, LogOut, Wallet, ExternalLink } from "lucide-react"
+import { formatUnits } from "viem"
 
 export function Header() {
   const router = useRouter()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const { address, isConnected } = useAccount()
+  const { address, isConnected, chain } = useAccount()
   const { disconnect } = useDisconnect()
+  const { data: balance } = useBalance({
+    address: address,
+  })
 
   useEffect(() => {
     // Check for token in localStorage
@@ -90,7 +94,7 @@ export function Header() {
                             <Wallet className="h-4 w-4 text-purple-400" />
                             <span className="text-xs font-semibold text-muted-foreground">WALLET</span>
                           </div>
-                          <div className="bg-background/50 rounded-md p-2">
+                          <div className="bg-background/50 rounded-md p-2 space-y-2">
                             <div className="flex items-center justify-between">
                               <code className="text-xs font-mono text-foreground">
                                 {address.slice(0, 6)}...{address.slice(-4)}
@@ -105,6 +109,17 @@ export function Header() {
                                 <ExternalLink className="h-3 w-3" />
                               </button>
                             </div>
+                            {balance && (
+                              <div className="flex items-center justify-between pt-1 border-t border-border/30">
+                                <span className="text-xs text-muted-foreground">Balance</span>
+                                <div className="flex items-center gap-1">
+                                  <span className="text-xs font-semibold text-foreground">
+                                    {parseFloat(formatUnits(balance.value, balance.decimals)).toFixed(4)}
+                                  </span>
+                                  <span className="text-xs text-muted-foreground">{balance.symbol}</span>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                         <button
