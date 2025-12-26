@@ -3,9 +3,11 @@
  * Handles trading operations with remote builder signing
  */
 
-import { ClobClient } from '@polymarket/clob-client';
-import type { Signer } from 'ethers';
-import type { ClobCredentials, OrderParams, Order, OrderBook } from '@/types/trading';
+import { ClobClient, Side } from '@polymarket/clob-client';
+import { BuilderConfig } from '@polymarket/builder-signing-sdk';
+import type { Wallet } from '@ethersproject/wallet';
+import type { JsonRpcSigner } from '@ethersproject/providers';
+import type { ClobCredentials, OrderParams } from '@/types/trading';
 
 const CLOB_API_URL = process.env.NEXT_PUBLIC_CLOB_API_URL || 'https://clob.polymarket.com';
 const CHAIN_ID = parseInt(process.env.NEXT_PUBLIC_CHAIN_ID || '137');
@@ -28,7 +30,7 @@ export class ClobService {
    * Derive L2 API credentials from user's wallet signature
    * This is a one-time operation per wallet
    */
-  async deriveApiCredentials(signer: Signer): Promise<ClobCredentials> {
+  async deriveApiCredentials(signer: Wallet | JsonRpcSigner): Promise<ClobCredentials> {
     try {
       console.log('Deriving CLOB API credentials...');
 
@@ -44,7 +46,7 @@ export class ClobService {
       const derived = await tempClient.deriveApiKey();
 
       const credentials: ClobCredentials = {
-        apiKey: derived.apiKey,
+        key: derived.key,
         secret: derived.secret,
         passphrase: derived.passphrase,
       };
@@ -61,7 +63,7 @@ export class ClobService {
    * Initialize CLOB client with user credentials and remote signing
    */
   async initialize(
-    signer: Signer,
+    signer: Wallet | JsonRpcSigner,
     credentials: ClobCredentials,
     funderAddress?: string
   ): Promise<void> {
@@ -71,6 +73,13 @@ export class ClobService {
       console.log('- Chain ID:', CHAIN_ID);
       console.log('- Funder:', funderAddress || 'Not set');
 
+      // Create builder config for remote signing
+      const builderConfig = new BuilderConfig({
+        remoteBuilderConfig: {
+          url: `${BACKEND_URL}/api/polymarket/sign`,
+        },
+      });
+
       this.client = new ClobClient(
         CLOB_API_URL,
         CHAIN_ID,
@@ -78,12 +87,9 @@ export class ClobService {
         credentials,
         2, // Signature type: POLY_GNOSIS_SAFE
         funderAddress,
-        {
-          // Remote builder signing configuration
-          remoteBuilderConfig: {
-            url: `${BACKEND_URL}/api/polymarket/sign`,
-          },
-        }
+        undefined, // geoBlockToken
+        undefined, // useServerTime
+        builderConfig
       );
 
       console.log('✅ CLOB client initialized with remote signing');
@@ -124,7 +130,7 @@ export class ClobService {
         tokenID: params.tokenID,
         price: params.price,
         size: params.size,
-        side: params.side,
+        side: params.side === 'BUY' ? Side.BUY : Side.SELL,
       });
 
       console.log('✅ Order created:', order);
@@ -148,7 +154,7 @@ export class ClobService {
 
     try {
       console.log('Cancelling order:', orderID);
-      await this.client.cancelOrder(orderID);
+      await this.client.cancelOrder({ orderID });
       console.log('✅ Order cancelled');
     } catch (error: any) {
       console.error('Failed to cancel order:', error);
@@ -159,14 +165,14 @@ export class ClobService {
   /**
    * Get order book for a token
    */
-  async getOrderBook(tokenID: string): Promise<OrderBook> {
+  async getOrderBook(tokenID: string): Promise<any> {
     if (!this.client) {
       throw new Error('CLOB client not initialized');
     }
 
     try {
       const orderBook = await this.client.getOrderBook(tokenID);
-      return orderBook as OrderBook;
+      return orderBook;
     } catch (error: any) {
       console.error('Failed to get order book:', error);
       throw new Error(error?.message || 'Failed to load order book');
@@ -174,33 +180,16 @@ export class ClobService {
   }
 
   /**
-   * Get user's open orders
-   */
-  async getOrders(): Promise<Order[]> {
-    if (!this.client) {
-      throw new Error('CLOB client not initialized');
-    }
-
-    try {
-      const orders = await this.client.getOrders();
-      return orders as Order[];
-    } catch (error: any) {
-      console.error('Failed to get orders:', error);
-      return [];
-    }
-  }
-
-  /**
    * Get specific order by ID
    */
-  async getOrderById(orderID: string): Promise<Order | null> {
+  async getOrderById(orderID: string): Promise<any> {
     if (!this.client) {
       throw new Error('CLOB client not initialized');
     }
 
     try {
       const order = await this.client.getOrder(orderID);
-      return order as Order;
+      return order;
     } catch (error: any) {
       console.error('Failed to get order:', error);
       return null;

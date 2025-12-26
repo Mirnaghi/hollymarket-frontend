@@ -6,7 +6,7 @@ import { apiClient } from "@/lib/api-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp"
-import { Mail, Wallet, ArrowLeft, TrendingUp } from "lucide-react"
+import { Mail, ArrowLeft, TrendingUp } from "lucide-react"
 import { REGEXP_ONLY_DIGITS } from "input-otp"
 
 export default function LoginPage() {
@@ -63,16 +63,6 @@ export default function LoginPage() {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const handleWalletConnect = async () => {
-    setIsLoading(true)
-    setError("")
-
-    // Wallet connection would be implemented here
-    // For now, show a message
-    setError("Wallet connection coming soon!")
-    setIsLoading(false)
   }
 
   return (
@@ -149,27 +139,6 @@ export default function LoginPage() {
                   className="w-full py-6 text-base glow-hover"
                 >
                   {isLoading ? "Sending code..." : "Continue with Email"}
-                </Button>
-
-                {/* Divider */}
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-border"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="px-4 bg-background text-muted-foreground">OR</span>
-                  </div>
-                </div>
-
-                {/* Wallet Connect Button */}
-                <Button
-                  onClick={handleWalletConnect}
-                  disabled={isLoading}
-                  variant="outline"
-                  className="w-full py-6 text-base gap-2 glass glow-hover"
-                >
-                  <Wallet className="h-5 w-5" />
-                  {isLoading ? "Connecting..." : "Connect Wallet"}
                 </Button>
               </>
             ) : (

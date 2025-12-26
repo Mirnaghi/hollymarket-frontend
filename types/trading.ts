@@ -3,7 +3,7 @@
  */
 
 export interface ClobCredentials {
-  apiKey: string;
+  key: string;
   secret: string;
   passphrase: string;
 }
